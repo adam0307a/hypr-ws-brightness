@@ -1,0 +1,18 @@
+pkgbase = hypr-ws-brightness-bin
+	pkgdesc = Per-workspace hardware brightness manager and interactive TUI for Hyprland
+	pkgver = 1.0.0
+	pkgrel = 1
+	url = https://github.com/adam0307a/hypr-ws-brightness
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	depends = brightnessctl
+	optdepends = hyprland: Wayland compositor
+	provides = hypr-ws-brightness
+	conflicts = hypr-ws-brightness
+	source_x86_64 = hypr-ws-brightness-bin-1.0.0-x86_64.tar.gz::https://github.com/adam0307a/hypr-ws-brightness/releases/download/v1.0.0/hypr-ws-brightness-0.1.0-linux-amd64.tar.gz
+	sha256sums_x86_64 = 4dc2d4c9cbff0378d8ccacf9484475abb46bb7ee97b01832f5201a8b069d5861
+	source_aarch64 = hypr-ws-brightness-bin-1.0.0-aarch64.tar.gz::https://github.com/adam0307a/hypr-ws-brightness/releases/download/v1.0.0/hypr-ws-brightness-0.1.0-linux-arm64.tar.gz
+	sha256sums_aarch64 = eead90b0b2f025f11c7ba57c384fbf91982d57a0d282932df911121712f40b64
+
+pkgname = hypr-ws-brightness-bin

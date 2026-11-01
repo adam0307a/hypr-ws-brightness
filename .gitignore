@@ -3,3 +3,7 @@
 /dist/
 *.test
 *.out
+packaging/aur/pkg/
+packaging/aur/src/
+packaging/aur/*.tar.gz
+packaging/aur/*.pkg.tar.*

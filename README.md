@@ -38,7 +38,19 @@ Unlike window-dimming shaders (`hyprdim`) or ambient-light daemons (`wluma`), `h
 
 ## Installation
 
-### Option 1: Pre-built Static Binary (GitHub Releases)
+### Option 1: Arch Linux (`makepkg` / `PKGBUILD`)
+
+Install as a native `pacman`-tracked package using the included [`PKGBUILD`](packaging/aur/PKGBUILD):
+
+```bash
+git clone https://github.com/adam0307a/hypr-ws-brightness.git
+cd hypr-ws-brightness/packaging/aur
+makepkg -si
+```
+
+*(Can be cleanly removed anytime with `sudo pacman -R hypr-ws-brightness-bin`.)*
+
+### Option 2: Pre-built Static Binary (All Linux Distros)
 
 Download the latest static archive for your architecture from [Releases](https://github.com/adam0307a/hypr-ws-brightness/releases) and place `hypr-ws-brightness` into `~/.local/bin` or `/usr/local/bin`:
 
@@ -47,7 +59,7 @@ tar -xzf hypr-ws-brightness-0.1.0-linux-amd64.tar.gz
 install -Dm755 hypr-ws-brightness ~/.local/bin/hypr-ws-brightness
 ```
 
-### Option 2: Build & Install from Source
+### Option 3: Build & Install from Source
 
 ```bash
 git clone https://github.com/adam0307a/hypr-ws-brightness.git
