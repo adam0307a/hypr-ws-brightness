@@ -1,0 +1,28 @@
+# hypr-ws-brightness example configuration
+# Copy to: ~/.config/hypr-ws-brightness/config.toml (or run: hypr-ws-brightness init)
+
+# Backlight device name reported by `brightnessctl --list` (e.g. "amdgpu_bl2", "intel_backlight").
+# Set to "auto" (or leave empty) to automatically select the first backlight-class device.
+device = "auto"
+
+# Fallback brightness percentage (0-100) applied to workspaces without an explicit entry below.
+default_brightness = 50
+
+# Delay in milliseconds (0-30000) before brightening when switching from a darker workspace
+# to a brighter one. Dimming (high -> low) always begins immediately (0ms delay).
+delay_ms = 500
+
+# Slow, gentle fade duration in ms (0-10000) when brightening (low -> high).
+transition_ms = 800
+
+# Fast/instant dim duration in ms (0-10000) when dimming (high -> low; 0 = instant drop).
+dim_transition_ms = 100
+
+# Workspace IDs that always bypass delay_ms (0ms delay even when brightening).
+instant_workspaces = []
+
+# Workspace ID -> hardware brightness percentage (0-100)
+[workspaces]
+1 = 70
+2 = 40
+3 = 30

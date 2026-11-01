@@ -1,0 +1,5 @@
+/hypr-ws-brightness
+/bin/
+/dist/
+*.test
+*.out
