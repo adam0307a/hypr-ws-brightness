@@ -9,7 +9,7 @@ Unlike window-dimming shaders (`hyprdim`) or ambient-light daemons (`wluma`), `h
 ## Screenshot
 
 <!-- Replace the placeholder below with an actual TUI screenshot before publishing -->
-<img width="1779" height="669" alt="image" src="https://github.com/user-attachments/assets/40579b12-5b87-41aa-b473-30712a7598fb" />
+<img width="1781" height="567" alt="image" src="https://github.com/user-attachments/assets/8c33abc9-50f8-4675-bf09-2c20790c023c" />
 
 
 ---
