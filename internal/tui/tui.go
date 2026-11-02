@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -17,7 +18,35 @@ import (
 	"github.com/adam0307a/hypr-ws-brightness/internal/brightness"
 	"github.com/adam0307a/hypr-ws-brightness/internal/config"
 	"github.com/adam0307a/hypr-ws-brightness/internal/hyprland"
+	"github.com/adam0307a/hypr-ws-brightness/internal/service"
 )
+
+// daemonPollInterval controls how often the TUI refreshes daemon status.
+const daemonPollInterval = 2 * time.Second
+
+type daemonTickMsg struct{}
+
+type daemonStatusMsg struct {
+	pids []int
+	err  error
+}
+
+type daemonActionMsg struct {
+	action string
+	pids   []int
+	err    error
+}
+
+func daemonTick() tea.Cmd {
+	return tea.Tick(daemonPollInterval, func(time.Time) tea.Msg { return daemonTickMsg{} })
+}
+
+func checkDaemonCmd() tea.Cmd {
+	return func() tea.Msg {
+		pids, err := service.FindDaemons()
+		return daemonStatusMsg{pids: pids, err: err}
+	}
+}
 
 type inputMode int
 
@@ -122,6 +151,11 @@ type model struct {
 	width        int
 	height       int
 	st           styles
+
+	deviceOverride string
+	daemonPIDs     []int
+	daemonKnown    bool
+	daemonBusy     bool
 }
 
 // Run launches the interactive terminal UI.
@@ -173,6 +207,12 @@ func Run(opts Options) error {
 		inHyprland: inHypr,
 		currentHW:  currHW,
 		st:         defaultStyles(),
+
+		deviceOverride: opts.DeviceOverride,
+	}
+	if pids, err := service.FindDaemons(); err == nil {
+		m.daemonPIDs = pids
+		m.daemonKnown = true
 	}
 	m.refreshWorkspaces()
 
@@ -497,7 +537,76 @@ func (m *model) captureCurrentToSelected() {
 }
 
 func (m *model) Init() tea.Cmd {
-	return nil
+	return daemonTick()
+}
+
+func (m *model) startDaemonCmd() tea.Cmd {
+	cfgPath := m.configPath
+	device := m.deviceOverride
+	return func() tea.Msg {
+		pid, err := service.Start(service.StartOptions{ConfigPath: cfgPath, Device: device})
+		var pids []int
+		if err == nil {
+			pids = []int{pid}
+		}
+		return daemonActionMsg{action: "start", pids: pids, err: err}
+	}
+}
+
+func stopDaemonCmd() tea.Cmd {
+	return func() tea.Msg {
+		pids, err := service.Stop(3 * time.Second)
+		return daemonActionMsg{action: "stop", pids: pids, err: err}
+	}
+}
+
+func (m *model) restartDaemonCmd() tea.Cmd {
+	start := m.startDaemonCmd()
+	return func() tea.Msg {
+		if _, err := service.Stop(3 * time.Second); err != nil {
+			return daemonActionMsg{action: "restart", err: err}
+		}
+		res := start().(daemonActionMsg)
+		res.action = "restart"
+		return res
+	}
+}
+
+func (m *model) toggleDaemon() tea.Cmd {
+	if m.daemonBusy {
+		return nil
+	}
+	m.daemonBusy = true
+	if len(m.daemonPIDs) > 0 {
+		m.setStatus("Stopping daemon...", false)
+		return stopDaemonCmd()
+	}
+	m.setStatus("Starting daemon...", false)
+	return m.startDaemonCmd()
+}
+
+func (m *model) handleDaemonAction(msg daemonActionMsg) {
+	m.daemonBusy = false
+	if pids, err := service.FindDaemons(); err == nil {
+		m.daemonPIDs = pids
+		m.daemonKnown = true
+	}
+	if msg.err != nil {
+		m.setStatus(fmt.Sprintf("Daemon %s failed: %v", msg.action, msg.err), true)
+		return
+	}
+	switch msg.action {
+	case "stop":
+		if len(msg.pids) == 0 {
+			m.setStatus("Daemon was not running", false)
+		} else {
+			m.setStatus("Daemon stopped — brightness is now free for manual/shell control (D to start again)", false)
+		}
+	case "start":
+		m.setStatus(fmt.Sprintf("Daemon started (pid %d) — per-workspace brightness active", msg.pids[0]), false)
+	case "restart":
+		m.setStatus(fmt.Sprintf("Daemon restarted (pid %d)", msg.pids[0]), false)
+	}
 }
 
 func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -505,6 +614,20 @@ func (m *model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		return m, nil
+
+	case daemonTickMsg:
+		return m, tea.Batch(checkDaemonCmd(), daemonTick())
+
+	case daemonStatusMsg:
+		if msg.err == nil && !m.daemonBusy {
+			m.daemonPIDs = msg.pids
+			m.daemonKnown = true
+		}
+		return m, nil
+
+	case daemonActionMsg:
+		m.handleDaemonAction(msg)
 		return m, nil
 
 	case tea.KeyMsg:
@@ -775,6 +898,17 @@ func (m *model) updateNormal(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "d", "x", "delete", "backspace":
 		m.resetSelectedRow()
 
+	case "D":
+		return m, m.toggleDaemon()
+
+	case "R":
+		if m.daemonBusy {
+			break
+		}
+		m.daemonBusy = true
+		m.setStatus("Restarting daemon...", false)
+		return m, m.restartDaemonCmd()
+
 	case "r":
 		m.refreshWorkspaces()
 		m.refreshHardwareBrightness()
@@ -832,7 +966,8 @@ func (m *model) View() string {
 		"Device: %s   Current: %d%%   Delay: %dms   Brighten: %dms   Dim: %dms",
 		m.ctrl.Device(), m.currentHW, m.cfg.DelayMs, m.cfg.TransitionMs, m.cfg.DimTransitionMs,
 	)
-	b.WriteString(m.st.subtitle.Render(metaLine) + "\n\n")
+	b.WriteString(m.st.subtitle.Render(metaLine) + "\n")
+	b.WriteString(m.renderDaemonStatus() + "\n\n")
 
 	var listBuilder strings.Builder
 	for i, r := range m.rows {
@@ -1013,8 +1148,32 @@ func (m *model) View() string {
 	helpLines := []string{
 		"↑/↓ j/k: select   ←/→ h/l: ±5% (±100ms)   -/+: ±1% (±50ms)   0-9/Enter: type value   i: toggle ⚡ 0ms delay on ws",
 		"c: capture brightness   y: edit delay   f: edit fade speed   p/Space: apply now   a: add ws   d: reset   q: quit",
+		"D: start/stop daemon   R: restart daemon   r: refresh",
 	}
 	b.WriteString("\n" + m.st.help.Render(strings.Join(helpLines, "\n")) + "\n")
 
 	return b.String()
+}
+
+func (m *model) renderDaemonStatus() string {
+	label := m.st.subtitle.Render("Daemon: ")
+	switch {
+	case m.daemonBusy:
+		return label + m.st.delayTag.Render("◌ working...")
+	case !m.daemonKnown:
+		return label + m.st.inheritTag.Render("? unknown")
+	case len(m.daemonPIDs) == 0:
+		return label + m.st.statusWarn.Render("○ stopped") +
+			m.st.subtitle.Render("  (brightness not managed per workspace — press D to start)")
+	default:
+		pids := make([]string, len(m.daemonPIDs))
+		for i, p := range m.daemonPIDs {
+			pids[i] = strconv.Itoa(p)
+		}
+		txt := m.st.activeTag.Render("● running") + m.st.subtitle.Render(" (pid "+strings.Join(pids, ", ")+")")
+		if len(m.daemonPIDs) > 1 {
+			txt += "  " + m.st.statusWarn.Render("⚠ multiple instances — press R to restart a single one")
+		}
+		return label + txt + m.st.subtitle.Render("  — press D to stop")
+	}
 }

@@ -170,6 +170,8 @@ hypr-ws-brightness tui
 | `a` | Add a new workspace ID not currently open |
 | `d`, `x`, or `Backspace` | Remove custom rule for workspace (revert to `default_brightness`) |
 | `r` | Refresh workspace list and current hardware brightness |
+| `D` (Shift+d) | **Start / stop the background daemon** (e.g. pause it to adjust brightness from your shell/bar UI without it being overridden on the next workspace switch) |
+| `R` (Shift+r) | Restart the daemon (also collapses duplicate instances into one) |
 | `s` | Explicitly save configuration to disk |
 | `q` or `Esc` | Quit TUI |
 
