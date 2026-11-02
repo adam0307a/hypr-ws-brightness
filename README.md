@@ -56,7 +56,7 @@ makepkg -si
 Download the latest static archive for your architecture from [Releases](https://github.com/adam0307a/hypr-ws-brightness/releases) and place `hypr-ws-brightness` into `~/.local/bin` or `/usr/local/bin`:
 
 ```bash
-tar -xzf hypr-ws-brightness-0.1.0-linux-amd64.tar.gz
+tar -xzf hypr-ws-brightness-1.1.0-linux-amd64.tar.gz
 install -Dm755 hypr-ws-brightness ~/.local/bin/hypr-ws-brightness
 ```
 

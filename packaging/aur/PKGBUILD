@@ -1,7 +1,6 @@
 # Maintainer: adam0307a <adam0307a@users.noreply.github.com>
 pkgname=hypr-ws-brightness-bin
-pkgver=1.0.0
-_asset_ver=0.1.0
+pkgver=1.1.0
 pkgrel=1
 pkgdesc="Per-workspace hardware brightness manager and interactive TUI for Hyprland"
 arch=('x86_64' 'aarch64')
@@ -11,10 +10,10 @@ depends=('brightnessctl')
 optdepends=('hyprland: Wayland compositor')
 provides=('hypr-ws-brightness')
 conflicts=('hypr-ws-brightness')
-source_x86_64=("${pkgname}-${pkgver}-x86_64.tar.gz::${url}/releases/download/v${pkgver}/hypr-ws-brightness-${_asset_ver}-linux-amd64.tar.gz")
-source_aarch64=("${pkgname}-${pkgver}-aarch64.tar.gz::${url}/releases/download/v${pkgver}/hypr-ws-brightness-${_asset_ver}-linux-arm64.tar.gz")
-sha256sums_x86_64=('4dc2d4c9cbff0378d8ccacf9484475abb46bb7ee97b01832f5201a8b069d5861')
-sha256sums_aarch64=('eead90b0b2f025f11c7ba57c384fbf91982d57a0d282932df911121712f40b64')
+source_x86_64=("${pkgname}-${pkgver}-x86_64.tar.gz::${url}/releases/download/v${pkgver}/hypr-ws-brightness-${pkgver}-linux-amd64.tar.gz")
+source_aarch64=("${pkgname}-${pkgver}-aarch64.tar.gz::${url}/releases/download/v${pkgver}/hypr-ws-brightness-${pkgver}-linux-arm64.tar.gz")
+sha256sums_x86_64=('e04eaf4319d6fab99a7675bb65a8d283218e10976dd50fd9f009ba499353436d')
+sha256sums_aarch64=('5e5bc01d54fa7840e2715e40014c8a8a6b0208ffe09f1865ba171aea51f0952f')
 
 package() {
     install -Dm755 "${srcdir}/hypr-ws-brightness" "${pkgdir}/usr/bin/hypr-ws-brightness"

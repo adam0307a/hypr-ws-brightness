@@ -1,5 +1,5 @@
 BINARY_NAME := hypr-ws-brightness
-VERSION     ?= 0.1.0
+VERSION     ?= 1.1.0
 PREFIX      ?= $(HOME)/.local
 BINDIR      := $(PREFIX)/bin
 GO          ?= go
